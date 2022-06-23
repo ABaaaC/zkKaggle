@@ -1,42 +1,85 @@
 pragma circom 2.0.0;
 
-include "../../node_modules/circomlib/circuits/comparators.circom";
-include "../../node_modules/circomlib-matrix/circuits/matMul.circom";
-// include "../../node_modules/circomlib-ml/circuits/Conv2D.circom";
 
-template Conv2d(n) { // n is the number of variables in the system of equations
-    n = 3;
-    signal input x[n]; // this is the solution to the system of equations
-    signal input A[n][n]; // this is the coefficient matrix
-    signal input b[n]; // this are the constants in the system of equations
-    signal output out; // 1 for correct solution, 0 for incorrect solution
+include "../../node_modules/circomlib-ml/circuits/Conv2D.circom";
+include "../../node_modules/circomlib-ml/circuits/Dense.circom";
+include "../../node_modules/circomlib-ml/circuits/ArgMax.circom";
+include "../../node_modules/circomlib-ml/circuits/Poly.circom";
+include "../../node_modules/circomlib-ml/circuits/ReLU.circom";
+include "./MaxPool2D.circom";
 
 
-    component multiplication = matMul(n,n,1);
-    // Initialization of A and x:
-    for (var i = 0; i < n; i++) {
-        for (var j = 0; j < n; j++) {
-            multiplication.a[i][j] <== A[i][j];
+template cifar_net() {
+    signal input in[32][32][3];
+
+    signal input conv1_w[5][5][3][128];
+    signal input conv1_b[128];
+
+    signal input conv2_w[5][5][128][20];
+    signal input conv2_b[20];
+
+    signal input dense_w[500][10];
+    signal input dense_b[10];
+    signal output out;
+
+    component conv1 = Conv2D(32,32,3,128,5);
+    component relu1[28*28];
+    component maxpool1[14*14];
+
+    component conv2 = Conv2D(14,14,128,20,5);
+    component relu2[10*10];
+    component maxpool2[5*5];
+
+
+    component dense = Dense(500,10);
+    component argmax = ArgMax(10);
+
+    // Let fill the weights of layers
+
+    for (var cout = 0; cout < 128; cout++) {
+        conv1.bias[cout] <== conv1_b[cout];
+        for (var i=0; i<5; i++) {
+            for (var j=0; j<5; j++) {
+                for (var cin = 0; cin < 3; cin++) {
+                    conv1.weights[i][j][0][0] <== conv1_w[i][j][0][0];
+                }
+            }
         }
-        multiplication.b[i][0] <== x[i];
     }
 
-    // Compare A[i][:]*x and b[i]
-    component equals_axb[n]; 
-    for (var i = 0; i < n; i++) {
-        equals_axb[i] = IsEqual();
-        equals_axb[i].in[0] <== multiplication.out[i][0];
-        equals_axb[i].in[1] <== b[i];
+    for (var cout = 0; cout < 20; cout++) {
+        conv2.bias[cout] <== conv2_b[cout];
+        for (var i=0; i<5; i++) {
+            for (var j=0; j<5; j++) {
+                for (var cin = 0; cin < 128; cin++) {
+                    conv2.weights[i][j][0][0] <== conv2_w[i][j][0][0];
+                }
+            }
+        }
     }
 
-    // Check all comarisons
-    signal all_equals[n];
-    all_equals[0] <== equals_axb[0].out;
-    for (var i = 1; i < n; i++) {
-        all_equals[i] <== all_equals[i-1] * equals_axb[i].out;
+    for (var cout = 0; cout < 10; cout++) {
+        dense.bias[cout] <== dense_b[cout];
+        for (var cin = 0; cin < 500; cin++) {
+            dense.weights[i][j] <== dense_w[i][j];
+        }
     }
-    out <== all_equals[n-1];
+
+    
+
+    // put batch through the network
+
+    for (var i = 0; i < 32; i++) {
+        for (var j = 0; j < 32; j++) {
+            for (var cin = 0; cin < 3; cin++) {
+                conv1.in[i][j][cin] <== in[i][j][cin];
+            }
+        }
+    }
+
+
+
 
 }
 
-component main {public [A, b]} = Conv2d(3);
+component main = cifar_net();

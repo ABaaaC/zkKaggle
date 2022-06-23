@@ -5,6 +5,7 @@ include "../../node_modules/circomlib/switcher.circom";
 
 // MaxPool2D layer
 template MaxPool2D(kernel_size) {
+    // case kernel_size == stride
     signal input in[kernel_size][kernel_size];
     signal output out;
 
