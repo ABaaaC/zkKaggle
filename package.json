@@ -6,6 +6,7 @@
     "chai": "^4.3.6",
     "circomlib": "^2.0.3",
     "circomlib-matrix": "^1.0.0",
+    "circomlib-ml": "^1.1.0",
     "ethereum-waffle": "^3.4.4",
     "ethers": "^5.6.4",
     "hardhat": "^2.9.3",
@@ -13,5 +14,8 @@
   },
   "scripts": {
     "test": ". scripts/compile.sh && node scripts/bump-solidity.js && npx hardhat test"
+  },
+  "dependencies": {
+    "circomlib-ml": "^1.1.0"
   }
 }
