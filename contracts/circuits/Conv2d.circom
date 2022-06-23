@@ -93,7 +93,10 @@ template cifar_net() {
         for (var j = 0; j < 14; j++) {
             for (var cin = 0; cin < 128; cin++) {
                 maxpool1[i][j][cin] = MaxPool2D();
-                maxpool1[i][j][cin].in <== relu1[i][j][cin].out;
+                maxpool1[i][j][cin].in[0][0] <== relu1[i][j][cin].out;
+                maxpool1[i][j][cin].in[1][0] <== relu1[i+1][j][cin].out;
+                maxpool1[i][j][cin].in[0][1] <== relu1[i][j+1][cin].out;
+                maxpool1[i][j][cin].in[1][1] <== relu1[i+1][j+1][cin].out;
             }
         }
     }
@@ -118,11 +121,14 @@ template cifar_net() {
     }
 
     // maxpool2
-    for (var i = 0; i < 10; i++) {
-        for (var j = 0; j < 10; j++) {
+    for (var i = 0; i < 5; i++) {
+        for (var j = 0; j < 5; j++) {
             for (var cin = 0; cin < 20; cin++) {
                 maxpool2[i][j][cin] = MaxPool2D();
-                maxpool2[i][j][cin].in <== relu2[i][j][cin].out;
+                maxpool2[i][j][cin].in[0][0] <== relu2[i][j][cin].out;
+                maxpool2[i][j][cin].in[1][0] <== relu2[i+1][j][cin].out;
+                maxpool2[i][j][cin].in[0][1] <== relu2[i][j+1][cin].out;
+                maxpool2[i][j][cin].in[1][1] <== relu2[i+1][j+1][cin].out;            
             }
         }
     }
