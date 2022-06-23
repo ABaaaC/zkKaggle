@@ -23,12 +23,12 @@ template cifar_net() {
     signal output out;
 
     component conv1 = Conv2D(32,32,3,128,5);
-    component relu1[28*28];
-    component maxpool1[14*14];
+    component relu1[28][28][128];
+    component maxpool1[14][14][128];
 
     component conv2 = Conv2D(14,14,128,20,5);
-    component relu2[10*10];
-    component maxpool2[5*5];
+    component relu2[10][10][20];
+    component maxpool2[5][5][20];
 
 
     component dense = Dense(500,10);
@@ -69,6 +69,7 @@ template cifar_net() {
 
     // put batch through the network
 
+    // conv1
     for (var i = 0; i < 32; i++) {
         for (var j = 0; j < 32; j++) {
             for (var cin = 0; cin < 3; cin++) {
@@ -77,9 +78,72 @@ template cifar_net() {
         }
     }
 
+    // relu1
+    for (var i = 0; i < 28; i++) {
+        for (var j = 0; j < 28; j++) {
+            for (var cin = 0; cin < 128; cin++) {
+                relu1[i][j][cin] = ReLU();
+                relu1[i][j][cin].in <== conv1.out[i][j][cin];
+            }
+        }
+    }
+
+    // maxpool1
+    for (var i = 0; i < 14; i++) {
+        for (var j = 0; j < 14; j++) {
+            for (var cin = 0; cin < 128; cin++) {
+                maxpool1[i][j][cin] = MaxPool2D();
+                maxpool1[i][j][cin].in <== relu1[i][j][cin].out;
+            }
+        }
+    }
+
+    // conv2
+    for (var i = 0; i < 14; i++) {
+        for (var j = 0; j < 14; j++) {
+            for (var cin = 0; cin < 128; cin++) {
+                conv2.in[i][j][cin] <== maxpool1[i][j][cin].out;
+            }
+        }
+    }
+
+    // relu2
+    for (var i = 0; i < 10; i++) {
+        for (var j = 0; j < 10; j++) {
+            for (var cin = 0; cin < 20; cin++) {
+                relu2[i][j][cin] = ReLU();
+                relu2[i][j][cin].in <== conv2.out[i][j][cin];
+            }
+        }
+    }
+
+    // maxpool2
+    for (var i = 0; i < 10; i++) {
+        for (var j = 0; j < 10; j++) {
+            for (var cin = 0; cin < 20; cin++) {
+                maxpool2[i][j][cin] = MaxPool2D();
+                maxpool2[i][j][cin].in <== relu2[i][j][cin].out;
+            }
+        }
+    }
+
+    
+    // dense layer; to check dimensions!
+    var idx = 0;
+    for (var cin = 0; cin < 20; cin++) {
+        for (var i = 0; i < 10; i++) {
+            for (var j = 0; j < 10; j++) {
+                dense.in[idx] <== maxpool2[i][j][cin].out;
+                idx++;
+            }
+        }
+    }
 
 
-
+    for (var i=0; i<10; i++) {
+        argmax.in[i] <== dense.out[i];
+    }
+    out <== argmax.out;
 }
 
 component main = cifar_net();
