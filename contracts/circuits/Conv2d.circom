@@ -61,7 +61,7 @@ template cifar_net() {
     for (var cout = 0; cout < 10; cout++) {
         dense.bias[cout] <== dense_b[cout];
         for (var cin = 0; cin < 500; cin++) {
-            dense.weights[i][j] <== dense_w[i][j];
+            dense.weights[cin][cout] <== dense_w[cin][cout];
         }
     }
 
@@ -92,7 +92,7 @@ template cifar_net() {
     for (var i = 0; i < 14; i++) {
         for (var j = 0; j < 14; j++) {
             for (var cin = 0; cin < 128; cin++) {
-                maxpool1[i][j][cin] = MaxPool2D();
+                maxpool1[i][j][cin] = MaxPool2D(2);
                 maxpool1[i][j][cin].in[0][0] <== relu1[i][j][cin].out;
                 maxpool1[i][j][cin].in[1][0] <== relu1[i+1][j][cin].out;
                 maxpool1[i][j][cin].in[0][1] <== relu1[i][j+1][cin].out;
@@ -124,7 +124,7 @@ template cifar_net() {
     for (var i = 0; i < 5; i++) {
         for (var j = 0; j < 5; j++) {
             for (var cin = 0; cin < 20; cin++) {
-                maxpool2[i][j][cin] = MaxPool2D();
+                maxpool2[i][j][cin] = MaxPool2D(2);
                 maxpool2[i][j][cin].in[0][0] <== relu2[i][j][cin].out;
                 maxpool2[i][j][cin].in[1][0] <== relu2[i+1][j][cin].out;
                 maxpool2[i][j][cin].in[0][1] <== relu2[i][j+1][cin].out;

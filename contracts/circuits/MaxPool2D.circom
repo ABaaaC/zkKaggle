@@ -1,11 +1,11 @@
 pragma circom 2.0.0;
 
-include "../../node_modules/circomlib/comparators.circom";
-include "../../node_modules/circomlib/switcher.circom";
+include "../../node_modules/circomlib-ml/circuits/circomlib/comparators.circom";
+include "../../node_modules/circomlib-ml/circuits/circomlib/switcher.circom";
 
 // MaxPool2D layer
+// case kernel_size == stride
 template MaxPool2D(kernel_size) {
-    // case kernel_size == stride
     signal input in[kernel_size][kernel_size];
     signal output out;
 
@@ -13,8 +13,6 @@ template MaxPool2D(kernel_size) {
     component switchers[kernel_size + 1][kernel_size];  // switcher for comparing maxs
 
     signal maxs[kernel_size + 1][kernel_size];
-
-    
 
     for (var i = 0; i < kernel_size; i++) {
         for (var j = 0; j < kernel_size; j++) {
