@@ -84,7 +84,7 @@ template cifar_net3() {
     for (var i = 0; i < 30; i++) {
         for (var j = 0; j < 30; j++) {
             for (var cin = 0; cin < 32; cin++) {
-                poly1[i][j][cin] = Poly();
+                poly1[i][j][cin] = Poly(10**8);
                 log(cin);
                 poly1[i][j][cin].in <== conv1.out[i][j][cin];
             }
@@ -117,7 +117,7 @@ template cifar_net3() {
     for (var i = 0; i < 13; i++) {
         for (var j = 0; j < 13; j++) {
             for (var cin = 0; cin < 20; cin++) {
-                poly2[i][j][cin] = Poly();
+                poly2[i][j][cin] = Poly(10**8);
                 poly2[i][j][cin].in <== conv2.out[i][j][cin];
             }
         }
