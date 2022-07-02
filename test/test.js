@@ -1,65 +1,44 @@
-const { expect } = require("chai");
+const chai = require("chai");
 const { ethers } = require("hardhat");
 const fs = require("fs");
+const path = require("path");
+
 const { groth16 } = require("snarkjs");
+const wasm_tester = require("circom_tester").wasm;
 
-function unstringifyBigInts(o) {
-    if ((typeof(o) == "string") && (/^[0-9]+$/.test(o) ))  {
-        return BigInt(o);
-    } else if ((typeof(o) == "string") && (/^0x[0-9a-fA-F]+$/.test(o) ))  {
-        return BigInt(o);
-    } else if (Array.isArray(o)) {
-        return o.map(unstringifyBigInts);
-    } else if (typeof o == "object") {
-        if (o===null) return null;
-        const res = {};
-        const keys = Object.keys(o);
-        keys.forEach( (k) => {
-            res[k] = unstringifyBigInts(o[k]);
-        });
-        return res;
-    } else {
-        return o;
-    }
-}
+const F1Field = require("ffjavascript").F1Field;
+const Scalar = require("ffjavascript").Scalar;
+exports.p = Scalar.fromString("21888242871839275222246405745257275088548364400416034343698204186575808495617");
+const Fr = new F1Field(exports.p);
 
-describe("Conv2dVerifier", function () {
-    let Verifier;
-    let verifier;
+const assert = chai.assert;
 
-    beforeEach(async function () {
-        Verifier = await ethers.getContractFactory("Conv2dVerifier");
-        verifier = await Verifier.deploy();
-        await verifier.deployed();
-    });
+const input_signals = require("./cifar_input.json");
 
-    it("Should return true for correct proof", async function () {
-        //[assignment] Add comments to explain what each line is doing
-        const { proof, publicSignals } = await groth16.fullProve({
-            "x": ["15","17","19"],
-            "A": [["1","1","1"],["1","2","3"],["2","-1","1"]],
-            "b": ["51", "106", "32"]
-        },
-            "contracts/circuits/Conv2d/Conv2d_js/Conv2d.wasm","contracts/circuits/Conv2d/circuit_final.zkey");
 
-        const editedPublicSignals = unstringifyBigInts(publicSignals);
-        const editedProof = unstringifyBigInts(proof);
-        const calldata = await groth16.exportSolidityCallData(editedProof, editedPublicSignals);
-    
-        const argv = calldata.replace(/["[\]\s]/g, "").split(',').map(x => BigInt(x).toString());
-    
-        const a = [argv[0], argv[1]];
-        const b = [[argv[2], argv[3]], [argv[4], argv[5]]];
-        const c = [argv[6], argv[7]];
-        const Input = argv.slice(8);
+describe("CIFAR Net test", function () {
+    this.timeout(100000000);
 
-        expect(await verifier.verifyProof(a, b, c, Input)).to.be.true;
-    });
-    it("Should return false for invalid proof", async function () {
-        let a = [0, 0];
-        let b = [[0, 0], [0, 0]];
-        let c = [0, 0];
-        let d = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        expect(await verifier.verifyProof(a, b, c, d)).to.be.false;
+    it("Test model on cifar10", async function () {
+        console.log("start wasm_tester");
+        const circuit = await wasm_tester(path.join(__dirname, "circuits", "cifar_model_test.circom"));
+        console.log("finish wasm_tester");
+
+        const deepMap=(input,callback)=>input.map(entry=>entry.map?deepMap(entry,callback):callback(entry));
+
+        console.log('load data');
+        const INPUT = {
+            "in": deepMap(input_signals.in, Fr.e),
+            // "conv1_b": deepMap(input_signals.conv1_b, Fr.e),
+            // "conv2_w": deepMap(input_signals.conv2_w, Fr.e),
+            // "conv2_b": deepMap(input_signals.conv2_b, Fr.e),
+            // "dense_w": deepMap(input_signals.dense_w, Fr.e),
+            // "dense_b": deepMap(input_signals.dense_b, Fr.e)
+        }
+
+        console.log("compute witness");
+        // const witness = await circuit.calculateWitness(INPUT, true);
+
+        // console.log(witness[1]);
     });
 });

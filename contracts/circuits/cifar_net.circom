@@ -41,7 +41,7 @@ template cifar_net() {
         for (var i=0; i<5; i++) {
             for (var j=0; j<5; j++) {
                 for (var cin = 0; cin < 3; cin++) {
-                    conv1.weights[i][j][0][0] <== conv1_w[i][j][0][0];
+                    conv1.weights[i][j][cin][cout] <== conv1_w[i][j][cin][cout];
                 }
             }
         }
@@ -52,7 +52,7 @@ template cifar_net() {
         for (var i=0; i<5; i++) {
             for (var j=0; j<5; j++) {
                 for (var cin = 0; cin < 128; cin++) {
-                    conv2.weights[i][j][0][0] <== conv2_w[i][j][0][0];
+                    conv2.weights[i][j][cin][cout] <== conv2_w[i][j][cin][cout];
                 }
             }
         }
@@ -136,9 +136,9 @@ template cifar_net() {
     
     // dense layer; to check dimensions!
     var idx = 0;
-    for (var cin = 0; cin < 20; cin++) {
-        for (var i = 0; i < 10; i++) {
-            for (var j = 0; j < 10; j++) {
+    for (var i = 0; i < 5; i++) {
+        for (var j = 0; j < 5; j++) {
+            for (var cin = 0; cin < 20; cin++) {
                 dense.in[idx] <== maxpool2[i][j][cin].out;
                 idx++;
             }
@@ -152,4 +152,4 @@ template cifar_net() {
     out <== argmax.out;
 }
 
-component main = cifar_net();
+component main {public [in]} = cifar_net();
